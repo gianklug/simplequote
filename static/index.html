@@ -30,23 +30,37 @@
   <!-- App Container -->
   <div id="app" class="w-full max-w-2xl px-4 py-8 rounded-lg shadow-lg bg-gray-800 hidden">
     <!-- Header -->
-    <h1 class="text-4xl font-bold text-center mb-8">Quotes</h1>
+    <h1 class="text-4xl font-bold text-center mb-12">Quotes</h1>
 
     <!-- Add Quote Form -->
     <form id="add-quote-form" class="mb-8">
-      <h2 class="text-2xl font-semibold mb-4">Add Quote</h2>
-      <textarea id="quote-text" placeholder="Quote" required
-        class="w-full p-3 rounded-lg mb-4 border border-gray-600 bg-gray-700 h-32 resize-none"></textarea>
-      <input type="text" id="quote-person" placeholder="Person to be quoted" required
-        class="w-full p-3 rounded-lg mb-4 border border-gray-600 bg-gray-700">
-      <input type="text" id="quote-context" placeholder="Context (optional)"
-        class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700">
-      <button type="submit" class="w-full p-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold">Add Quote</button>
+      <details class="group">
+        <summary class="flex items-center justify-between cursor-pointer">
+          <h2 class="text-2xl font-semibold p-2">Add Quote</h2>
+          <span class="transform transition-transform duration-300 group-open:rotate-90">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+              class="bi bi-chevron-right" viewBox="0 0 16 16">
+              <path fill-rule="evenodd"
+                d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708" />
+            </svg>
+          </span>
+        </summary>
+        <div class="mt-2">
+          <textarea id="quote-text" placeholder="Quote" required
+            class="w-full p-3 rounded-lg mb-4 border border-gray-600 bg-gray-700 h-32 resize-none"></textarea>
+          <input type="text" id="quote-person" placeholder="Person to be quoted" required
+            class="w-full p-3 rounded-lg mb-4 border border-gray-600 bg-gray-700">
+          <input type="text" id="quote-context" placeholder="Context (optional)"
+            class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700">
+          <button type="submit" class="w-full p-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold">Add Quote</button>
+        </div>
+      </details>
     </form>
+    <hr class="border-gray-700 mb-8">
 
     <!-- Quote List -->
     <div id="quote-list" class="space-y-6">
-      <h2 class="text-2xl font-semibold mb-4">Quotes</h2>
+      <h2 class="text-2xl font-semibold mb-4 p-2">Quotes</h2>
       <div id="quote-container" class="space-y-4"></div>
     </div>
   </div>
