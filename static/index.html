@@ -90,6 +90,15 @@
     const addQuoteForm = document.getElementById('add-quote-form');
     const quoteContainer = document.getElementById('quote-container');
 
+
+    // Skip login if token is present
+    if (localStorage.getItem('authToken')) {
+      authToken = localStorage.getItem('authToken');
+      loginScreen.classList.add('hidden');
+      app.classList.remove('hidden');
+      loadQuotes();
+    }
+
     // Login functionality
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -98,6 +107,7 @@
         authToken = response.token;
         loginScreen.classList.add('hidden');
         app.classList.remove('hidden');
+        localStorage.setItem("authToken", authToken);
         loadQuotes();
       } catch (error) {
         alert(error.message || 'Login failed :c');
