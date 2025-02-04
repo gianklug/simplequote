@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Book</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fade-in 0.5s ease-out;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+
+  <!-- App Container -->
+  <div id="app" class="w-full max-w-2xl px-4 py-8 rounded-lg shadow-lg bg-gray-800 hidden">
+    <!-- Header -->
+    <h1 class="text-4xl font-bold text-center mb-8">Quotes</h1>
+
+    <!-- Add Quote Form -->
+    <form id="add-quote-form" class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Add Quote</h2>
+      <textarea id="quote-text" placeholder="Quote" required
+        class="w-full p-3 rounded-lg mb-4 border border-gray-600 bg-gray-700 h-32 resize-none"></textarea>
+      <input type="text" id="quote-person" placeholder="Person to be quoted" required
+        class="w-full p-3 rounded-lg mb-4 border border-gray-600 bg-gray-700">
+      <input type="text" id="quote-context" placeholder="Context (optional)"
+        class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700">
+      <button type="submit" class="w-full p-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold">Add Quote</button>
+    </form>
+
+    <!-- Quote List -->
+    <div id="quote-list" class="space-y-6">
+      <h2 class="text-2xl font-semibold mb-4">Quotes</h2>
+      <div id="quote-container" class="space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- Login Screen -->
+  <div id="login-screen" class="w-full max-w-sm px-6 py-8 rounded-lg shadow-lg bg-gray-800">
+    <h1 class="text-4xl font-bold text-center mb-6">🔐 Login</h1>
+    <form id="login-form">
+      <input type="password" id="password" placeholder="Enter Password" required
+        class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700">
+      <button type="submit" class="w-full p-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold">Login</button>
+    </form>
+  </div>
+
+  <script>
+    let authToken = '';
+
+    async function apiRequest(path, method = 'GET', body = null) {
+      const response = await fetch(`${path}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authToken
+        },
+        body: body ? JSON.stringify(body) : null
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'API request failed');
+      }
+
+      return response.json();
+    }
+
+    // UI References
+    const app = document.getElementById('app');
+    const loginScreen = document.getElementById('login-screen');
+    const loginForm = document.getElementById('login-form');
+    const passwordInput = document.getElementById('password');
+    const addQuoteForm = document.getElementById('add-quote-form');
+    const quoteContainer = document.getElementById('quote-container');
+
+    // Login functionality
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const response = await apiRequest('/login', 'POST', {password: passwordInput.value});
+        authToken = response.token;
+        loginScreen.classList.add('hidden');
+        app.classList.remove('hidden');
+        loadQuotes();
+      } catch (error) {
+        alert(error.message || 'Login failed :c');
+      }
+    });
+
+    // Load quotes
+    async function loadQuotes() {
+      try {
+        const quotes = await apiRequest('/quotes');
+        renderQuotes(quotes);
+      } catch (error) {
+        alert('Failed to load quotes');
+      }
+    }
+
+    // Add quote functionality
+    addQuoteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const quoteText = document.getElementById('quote-text').value.trim();
+      const quotePerson = document.getElementById('quote-person').value.trim();
+      const quoteContext = document.getElementById('quote-context').value.trim();
+
+      if (quoteText && quotePerson) {
+        try {
+          await apiRequest('/quotes', 'POST', {text: quoteText, person: quotePerson, context: quoteContext});
+          loadQuotes();
+          addQuoteForm.reset();
+        } catch (error) {
+          alert('Failed to add quote');
+        }
+      }
+    });
+
+    // Render quotes
+    function renderQuotes(quotes) {
+      quoteContainer.innerHTML = '';
+      quotes.forEach(quote => {
+        const quoteCard = document.createElement('div');
+        quoteCard.className = 'p-4 bg-gray-700 rounded-lg shadow-lg fade-in';
+
+        quoteCard.innerHTML = `
+                    <p class="text-lg font-medium mb-2">"${quote.text}"</p>
+                    <p class="text-sm text-gray-400">- ${quote.person}${quote.context ? ` (${quote.context})` : ''}</p>
+                    <p class="text-xs text-gray-500 mt-1">${new Date(quote.timestamp).toLocaleString()}</p>
+                `;
+        quoteContainer.appendChild(quoteCard);
+      });
+    }
+  </script>
+</body>
+
+</html>
