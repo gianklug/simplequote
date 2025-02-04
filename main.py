@@ -45,7 +45,8 @@ def close_connection(exception):
 def authenticate_request():
     token = request.headers.get("Authorization")
     if not token or token != PASSWORD_HASH:
-        return jsonify({"error": "Unauthorized"}), 401
+        return False
+    return True
 
 
 # --- Routes ---
@@ -69,7 +70,8 @@ def login():
 
 @app.route("/quotes", methods=["GET"])
 def get_quotes():
-    authenticate_request()  # Check auth
+    if not authenticate_request():
+        return jsonify({"error": "Unauthorized"}), 401
     cur = get_db().cursor()
     cur.execute(
         "SELECT text, person, context, timestamp FROM quotes ORDER BY timestamp DESC"
@@ -85,7 +87,8 @@ def get_quotes():
 
 @app.route("/quotes", methods=["POST"])
 def add_quote():
-    authenticate_request()  # Check auth
+    if not authenticate_request():
+        return jsonify({"error": "Unauthorized"}), 401
     data = request.json
     if not data:
         return jsonify({"error": "Unprocessable Entity"}), 422
