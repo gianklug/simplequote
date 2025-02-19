@@ -61,7 +61,10 @@
     <!-- Quote List -->
     <div id="quote-list" class="space-y-6">
       <h2 class="text-2xl font-semibold mb-4 p-2">Quotes</h2>
-      <div id="quote-container" class="space-y-4"></div>
+      <!-- Search -->
+      <input type="text" id="search" placeholder="Search"
+        class="w-full p-3 px-4 rounded-lg mb-6 border border-gray-600 bg-gray-700"></input>
+      <div id="quote-container" class="space-y-4" autocomplete=off></div>
     </div>
   </div>
 
@@ -103,6 +106,10 @@
     const passwordInput = document.getElementById('password');
     const addQuoteForm = document.getElementById('add-quote-form');
     const quoteContainer = document.getElementById('quote-container');
+    const searchForm = document.getElementById('search');
+
+    // Cache for search
+    let quotes = [];
 
 
     // Skip login if token is present
@@ -131,7 +138,7 @@
     // Load quotes
     async function loadQuotes() {
       try {
-        const quotes = await apiRequest('/quotes');
+        quotes = await apiRequest('/quotes');
         renderQuotes(quotes);
       } catch (error) {
         alert('Failed to load quotes');
@@ -154,6 +161,17 @@
           alert('Failed to add quote');
         }
       }
+    });
+
+    // Search
+    searchForm.addEventListener('input', async () => {
+      const searchQuery = searchForm.value.trim().toLowerCase();
+      const filteredQuotes = quotes.filter(quote => {
+        return quote.text.toLowerCase().includes(searchQuery) ||
+          quote.person.toLowerCase().includes(searchQuery) ||
+          quote.context.toLowerCase().includes(searchQuery);
+      });
+      renderQuotes(filteredQuotes);
     });
 
     // Render quotes
