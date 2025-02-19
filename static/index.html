@@ -65,131 +65,150 @@
       <input type="text" id="search" placeholder="Search"
         class="w-full p-3 px-4 rounded-lg mb-6 border border-gray-600 bg-gray-700"></input>
       <div id="quote-container" class="space-y-4" autocomplete=off></div>
+      <!-- Export -->
+      <div class="flex justify-end">
+        <button onclick="exportToCsv()" class="p-3 bg-gray-600 hover:bg-gray-700 rounded-lg">Export to
+          CSV</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Login Screen -->
-  <div id="login-screen" class="w-full max-w-sm px-6 py-8 rounded-lg shadow-lg bg-gray-800">
-    <h1 class="text-4xl font-bold text-center mb-6">🔐 Login</h1>
-    <form id="login-form">
-      <input type="password" id="password" placeholder="Enter Password" required
-        class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700">
-      <button type="submit" class="w-full p-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold">Login</button>
-    </form>
-  </div>
+    <!-- Login Screen -->
+    <div id="login-screen" class="w-full max-w-sm px-6 py-8 rounded-lg shadow-lg bg-gray-800">
+      <h1 class="text-4xl font-bold text-center mb-6">🔐 Login</h1>
+      <form id="login-form">
+        <input type="password" id="password" placeholder="Enter Password" required
+          class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700">
+        <button type="submit" class="w-full p-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold">Login</button>
+      </form>
+    </div>
 
-  <script>
-    let authToken = '';
+    <script>
+      let authToken = '';
 
-    async function apiRequest(path, method = 'GET', body = null) {
-      const response = await fetch(`${path}`, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authToken
-        },
-        body: body ? JSON.stringify(body) : null
-      });
+      async function apiRequest(path, method = 'GET', body = null) {
+        const response = await fetch(`${path}`, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authToken
+          },
+          body: body ? JSON.stringify(body) : null
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API request failed');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'API request failed');
+        }
+
+        return response.json();
       }
 
-      return response.json();
-    }
+      // UI References
+      const app = document.getElementById('app');
+      const loginScreen = document.getElementById('login-screen');
+      const loginForm = document.getElementById('login-form');
+      const passwordInput = document.getElementById('password');
+      const addQuoteForm = document.getElementById('add-quote-form');
+      const quoteContainer = document.getElementById('quote-container');
+      const searchForm = document.getElementById('search');
 
-    // UI References
-    const app = document.getElementById('app');
-    const loginScreen = document.getElementById('login-screen');
-    const loginForm = document.getElementById('login-form');
-    const passwordInput = document.getElementById('password');
-    const addQuoteForm = document.getElementById('add-quote-form');
-    const quoteContainer = document.getElementById('quote-container');
-    const searchForm = document.getElementById('search');
-
-    // Cache for search
-    let quotes = [];
+      // Cache for search
+      let quotes = [];
 
 
-    // Skip login if token is present
-    if (localStorage.getItem('authToken')) {
-      authToken = localStorage.getItem('authToken');
-      loginScreen.classList.add('hidden');
-      app.classList.remove('hidden');
-      loadQuotes();
-    }
-
-    // Login functionality
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      try {
-        const response = await apiRequest('/login', 'POST', {password: passwordInput.value});
-        authToken = response.token;
+      // Skip login if token is present
+      if (localStorage.getItem('authToken')) {
+        authToken = localStorage.getItem('authToken');
         loginScreen.classList.add('hidden');
         app.classList.remove('hidden');
-        localStorage.setItem("authToken", authToken);
         loadQuotes();
-      } catch (error) {
-        alert(error.message || 'Login failed :c');
       }
-    });
 
-    // Load quotes
-    async function loadQuotes() {
-      try {
-        quotes = await apiRequest('/quotes');
-        renderQuotes(quotes);
-      } catch (error) {
-        alert('Failed to load quotes');
-      }
-    }
-
-    // Add quote functionality
-    addQuoteForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const quoteText = document.getElementById('quote-text').value.trim();
-      const quotePerson = document.getElementById('quote-person').value.trim();
-      const quoteContext = document.getElementById('quote-context').value.trim();
-
-      if (quoteText && quotePerson) {
+      // Login functionality
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         try {
-          await apiRequest('/quotes', 'POST', {text: quoteText, person: quotePerson, context: quoteContext});
+          const response = await apiRequest('/login', 'POST', {password: passwordInput.value});
+          authToken = response.token;
+          loginScreen.classList.add('hidden');
+          app.classList.remove('hidden');
+          localStorage.setItem("authToken", authToken);
           loadQuotes();
-          addQuoteForm.reset();
         } catch (error) {
-          alert('Failed to add quote');
+          alert(error.message || 'Login failed :c');
+        }
+      });
+
+      // Load quotes
+      async function loadQuotes() {
+        try {
+          quotes = await apiRequest('/quotes');
+          renderQuotes(quotes);
+        } catch (error) {
+          alert('Failed to load quotes');
         }
       }
-    });
 
-    // Search
-    searchForm.addEventListener('input', async () => {
-      const searchQuery = searchForm.value.trim().toLowerCase();
-      const filteredQuotes = quotes.filter(quote => {
-        return quote.text.toLowerCase().includes(searchQuery) ||
-          quote.person.toLowerCase().includes(searchQuery) ||
-          quote.context.toLowerCase().includes(searchQuery);
+      // Add quote functionality
+      addQuoteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const quoteText = document.getElementById('quote-text').value.trim();
+        const quotePerson = document.getElementById('quote-person').value.trim();
+        const quoteContext = document.getElementById('quote-context').value.trim();
+
+        if (quoteText && quotePerson) {
+          try {
+            await apiRequest('/quotes', 'POST', {text: quoteText, person: quotePerson, context: quoteContext});
+            loadQuotes();
+            addQuoteForm.reset();
+          } catch (error) {
+            alert('Failed to add quote');
+          }
+        }
       });
-      renderQuotes(filteredQuotes);
-    });
 
-    // Render quotes
-    function renderQuotes(quotes) {
-      quoteContainer.innerHTML = '';
-      quotes.forEach(quote => {
-        const quoteCard = document.createElement('div');
-        quoteCard.className = 'p-4 bg-gray-700 rounded-lg shadow-lg fade-in';
+      // Search
+      searchForm.addEventListener('input', async () => {
+        const searchQuery = searchForm.value.trim().toLowerCase();
+        const filteredQuotes = quotes.filter(quote => {
+          return quote.text.toLowerCase().includes(searchQuery) ||
+            quote.person.toLowerCase().includes(searchQuery) ||
+            quote.context.toLowerCase().includes(searchQuery);
+        });
+        renderQuotes(filteredQuotes);
+      });
 
-        quoteCard.innerHTML = `
+      // Render quotes
+      function renderQuotes(quotes) {
+        quoteContainer.innerHTML = '';
+        quotes.forEach(quote => {
+          const quoteCard = document.createElement('div');
+          quoteCard.className = 'p-4 bg-gray-700 rounded-lg shadow-lg fade-in';
+
+          quoteCard.innerHTML = `
                     <p class="text-lg font-medium mb-2">"${quote.text}"</p>
                     <p class="text-sm text-gray-400">- ${quote.person}${quote.context ? ` (${quote.context})` : ''}</p>
                     <p class="text-xs text-gray-500 mt-1">${new Date(quote.timestamp).toLocaleString()}</p>
                 `;
-        quoteContainer.appendChild(quoteCard);
-      });
-    }
-  </script>
+          quoteContainer.appendChild(quoteCard);
+        });
+      }
+
+      // CSV Export
+      function exportToCsv() {
+        const csv =
+          'Quote;Person;Context;Timestamp\n' +
+          quotes.map(quote => {
+            return `${quote.text};${quote.person};${quote.context};${new Date(quote.timestamp).toLocaleString()}`;
+          }).join('\n');
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'quotes.csv';
+        a.click();
+      }
+    </script>
 </body>
 
 </html>
