@@ -135,6 +135,9 @@
       e.preventDefault();
       try {
         const response = await apiRequest('/login', 'POST', {password: passwordInput.value});
+        if (response.status === 401) {
+          throw new Error('Invalid token');
+        }
         authToken = response.token;
         loginScreen.classList.add('hidden');
         app.classList.remove('hidden');
