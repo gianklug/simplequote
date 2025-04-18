@@ -98,6 +98,11 @@
 
       if (!response.ok) {
         const errorData = await response.json();
+        // Log out if token has changed
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          window.location.reload();
+        }
         throw new Error(errorData.error || 'API request failed');
       }
 
