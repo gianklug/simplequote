@@ -52,6 +52,10 @@
             class="w-full p-3 rounded-lg mb-4 border border-gray-600 bg-gray-700">
           <input type="text" id="quote-context" placeholder="Context (optional)"
             class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700">
+          <select id="quote-tags" class="w-full p-3 rounded-lg mb-6 border border-gray-600 bg-gray-700" required>
+            <option value="" disabled selected>Select Tag...</option>
+            <!-- Tags will be populated here -->
+          </select>
           <button type="submit" class="w-full p-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold">Add Quote</button>
         </div>
       </details>
@@ -160,6 +164,8 @@
       try {
         quotes = await apiRequest('/quotes');
         renderQuotes(quotes);
+        tags = await apiRequest('/tags');
+        renderTags(tags);
       } catch (error) {
         alert('Failed to load quotes');
       }
@@ -171,14 +177,15 @@
       const quoteText = document.getElementById('quote-text').value.trim();
       const quotePerson = document.getElementById('quote-person').value.trim();
       const quoteContext = document.getElementById('quote-context').value.trim();
+      const quoteTag = document.getElementById('quote-tags').value;
 
       if (quoteText && quotePerson) {
         try {
-          await apiRequest('/quotes', 'POST', {text: quoteText, person: quotePerson, context: quoteContext});
+          await apiRequest('/quotes', 'POST', {text: quoteText, person: quotePerson, context: quoteContext, tag: quoteTag});
           loadQuotes();
           addQuoteForm.reset();
         } catch (error) {
-          alert('Failed to add quote');
+          alert('Failed to add quote :c');
         }
       }
     });
@@ -194,19 +201,50 @@
       renderQuotes(filteredQuotes);
     });
 
+    function getTagColor(tag) {
+      let hash = 5381;
+      for (let i = tag.length - 1; i >= 0; i--) {
+        hash = ((hash << 5) + hash) + tag.charCodeAt(i);
+      }
+      hash = Math.abs(hash);
+      const hue = (hash % 260) + 100;
+      return `hsl(${hue}, 70%, 45%)`;
+    }
+
     // Render quotes
     function renderQuotes(quotes) {
       quoteContainer.innerHTML = '';
       quotes.forEach(quote => {
         const quoteCard = document.createElement('div');
-        quoteCard.className = 'p-4 bg-gray-700 rounded-lg shadow-lg fade-in';
+        quoteCard.className = 'p-4 bg-gray-700 rounded-lg shadow-lg fade-in relative';
+
+        let tagHtml = '';
+        if (quote.tag && quote.tag !== '') {
+          tagHtml = `
+            <span class="absolute top-2 right-2 bg-green-600 text-xs text-white px-2 py-1 rounded" style="background-color: ${getTagColor(quote.tag)}">
+              ${quote.tag}
+            </span>
+          `;
+        }
 
         quoteCard.innerHTML = `
-                    <p class="text-lg font-medium mb-2">"${quote.text}"</p>
-                    <p class="text-sm text-gray-400">- ${quote.person}${quote.context ? ` (${quote.context})` : ''}</p>
-                    <p class="text-xs text-gray-500 mt-1">${new Date(quote.timestamp).toLocaleString()}</p>
-                `;
+          ${tagHtml}
+          <p class="text-lg font-medium mb-2">"${quote.text}"</p>
+          <p class="text-sm text-gray-400">- ${quote.person}${quote.context ? ` (${quote.context})` : ''}</p>
+          <p class="text-xs text-gray-500 mt-1">${new Date(quote.timestamp).toLocaleString()}</p>
+        `;
         quoteContainer.appendChild(quoteCard);
+      });
+    }
+
+    function renderTags(tags) {
+      const tagSelect = document.getElementById('quote-tags');
+      tagSelect.innerHTML = '<option value="" disabled selected>Select Tag...</option>';
+      tags.forEach(tag => {
+        const option = document.createElement('option');
+        option.value = tag;
+        option.textContent = tag;
+        tagSelect.appendChild(option);
       });
     }
 

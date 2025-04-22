@@ -19,9 +19,14 @@ def get_db():
     return db
 
 
+def get_tags():
+    return getenv("TAGS", "a,b,c").split(",")
+
+
 def init_db():
     with app.app_context():
         db = get_db()
+        # Base table
         db.execute("""
             CREATE TABLE IF NOT EXISTS quotes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,6 +35,11 @@ def init_db():
                 context TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
+        """)
+        # Migration to add `tag` column
+        db.execute("""
+            ALTER TABLE quotes
+            ADD COLUMN tag TEXT DEFAULT ''
         """)
         db.commit()
 
@@ -74,15 +84,28 @@ def get_quotes():
         return jsonify({"error": "Unauthorized"}), 401
     cur = get_db().cursor()
     cur.execute(
-        "SELECT text, person, context, timestamp FROM quotes ORDER BY timestamp DESC"
+        "SELECT text, person, context, timestamp, tag FROM quotes ORDER BY timestamp DESC"
     )
     quotes = cur.fetchall()
     return jsonify(
         [
-            {"text": row[0], "person": row[1], "context": row[2], "timestamp": row[3]}
+            {
+                "text": row[0],
+                "person": row[1],
+                "context": row[2],
+                "timestamp": row[3],
+                "tag": row[4],
+            }
             for row in quotes
         ]
     )
+
+
+@app.route("/tags", methods=["GET"])
+def get_tags_route():
+    if not authenticate_request():
+        return jsonify({"error": "Unauthorized"}), 401
+    return jsonify(get_tags())
 
 
 @app.route("/quotes", methods=["POST"])
@@ -92,10 +115,12 @@ def add_quote():
     data = request.json
     if not data:
         return jsonify({"error": "Unprocessable Entity"}), 422
+    if data["tag"] not in get_tags():
+        return jsonify({"error": "Invalid tag"}), 422
     db = get_db()
     db.execute(
-        "INSERT INTO quotes (text, person, context) VALUES (?, ?, ?)",
-        (data["text"], data["person"], data.get("context", "")),
+        "INSERT INTO quotes (text, person, context, tag) VALUES (?, ?, ?, ?)",
+        (data["text"], data["person"], data.get("context", ""), data["tag"]),
     )
     db.commit()
     return jsonify({"success": True}), 201
