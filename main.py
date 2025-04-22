@@ -36,11 +36,15 @@ def init_db():
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        # Migration to add `tag` column
-        db.execute("""
-            ALTER TABLE quotes
-            ADD COLUMN tag TEXT DEFAULT ''
-        """)
+        try:
+            # Migration to add `tag` column
+            db.execute("""
+                ALTER TABLE quotes
+                ADD COLUMN tag TEXT DEFAULT ''
+            """)
+        except sqlite3.OperationalError:
+            # Column already exists, ignore error
+            pass
         db.commit()
 
 
