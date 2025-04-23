@@ -174,10 +174,21 @@
     // Add quote functionality
     addQuoteForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const quoteText = document.getElementById('quote-text').value.trim();
+      let quoteText = document.getElementById('quote-text').value.trim();
       const quotePerson = document.getElementById('quote-person').value.trim();
       const quoteContext = document.getElementById('quote-context').value.trim();
       const quoteTag = document.getElementById('quote-tags').value;
+      // all the possible quote types
+      const leftQuotes = ['"', '“', '‘', '«', "„", "'"];
+      const rightQuotes = ['"', '”', '’', '»', "“", "'"];
+      // fix start
+      if (leftQuotes.includes(quoteText[0])) {
+        quoteText = quoteText.slice(1);
+      }
+      // fix end
+      if (rightQuotes.includes(quoteText[quoteText.length - 1])) {
+        quoteText = quoteText.slice(0, -1);
+      }
 
       if (quoteText && quotePerson) {
         try {
